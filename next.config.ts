@@ -4,21 +4,42 @@ const nextConfig = {
     WEBHOOK_SECRET: process.env.WEBHOOK_SECRET,
   },
   images: {
-    domains: ["avatars.githubusercontent.com", "github.com"],
+    domains: ['avatars.githubusercontent.com', 'github.com'],
   },
   experimental: {
     serverActions: true,
   },
-  // Ensure CSS is properly processed
-  webpack: (config: any, { isServer }: { isServer: boolean }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-      };
-    }
-    return config;
+  // Ensure API routes work on Vercel
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
+      },
+    ];
   },
-};
+  // Headers for webhook endpoint
+  async headers() {
+    return [
+      {
+        source: '/api/webhook',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, x-github-event, x-github-delivery, x-hub-signature-256',
+          },
+        ],
+      },
+    ];
+  },
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig
